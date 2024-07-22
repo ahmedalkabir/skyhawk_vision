@@ -3,6 +3,7 @@
 <head>
   <title>Skyhawk Vision</title>
   <script defer src="{{ url_for('static', path='/js/alpine.min.js') }}"></script>
+  <link href="{{url_for('static', path='/css/main.css')}}" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
@@ -11,23 +12,29 @@
     <button x-on:click="start_camera()">Start Camera</button>
     <br>
     <br>
-    <button x-on:click="start_camera()">Stop Camera</button>
+    <button x-on:click="stop_camera()">Stop Camera</button>
   </div>
   <br>
-  <div x-data>
-    <div x-data="{ open: false }">
-      <button @click="open = ! open">Expand</button>
-   
-      <div x-show="open">
-             <div id="img-src">
 
-             </div>
-      </div>
+  <div x-data>
+    <div  id="img-src">
+      <img width="600px" src="{{url_for('static', path='image/image.png')}}">
+    </div>
   </div>
+
+  <div class="data-box">
+    <div>
+      <h3>People: <pr id="people"></pr></h3>
+    </div>
   </div>
-  <!-- <img src="{{ url_for('video_feed') }}"> -->
-  <!-- jinja2のテンプレートの書き方です。/video_feedを呼び出しています。 -->
+
   <script>
+    let evtSource = new EventSource('sse-testing')
+    evtSource.onmessage = (event) => {
+      let people = document.getElementById('people')
+      people.innerText = `${event.data}`
+    }
+
     async function start_camera() {
       const url = `{{url_for('start_camera')}}`
       try {
@@ -38,7 +45,8 @@
 
         const json = await response.json();
         let img_src = document.getElementById('img-src');
-        img_src.innerHTML = `<img src="{{url_for('video_feed')}}">`
+        img_src.innerHTML = `<img class='video-feed' width='600px' src="{{url_for('video_feed')}}">`
+        
 
         console.log(json);
       } catch (error) {
@@ -47,7 +55,7 @@
     }
 
     async function stop_camera() {
-      const url = `{{url_for('start_camera')}}`
+      const url = `{{url_for('stop_camera')}}`
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -55,11 +63,14 @@
         }
 
         const json = await response.json();
+        let img_src = document.getElementById('img-src');
+        img_src.innerHTML = `<img width="600px" src="{{url_for('static', path='image/image.png')}}">`
         console.log(json);
       } catch (error) {
         console.error(error.message);
       }
     }
+
 
   </script>
 </body>

@@ -17,14 +17,22 @@ class Camera(BaseCamera):
             raise RuntimeError('Could not start camera.')
         model = YOLO("yolov8n.pt")
         model.to('cpu')
+        people = 0 
         while True:
             # read current frame
+            people = 0
             _, img = camera.read()
 
 
-            results = model(img)
-
+            results = model(img, classes=0)
+            # print(len(results))
+            for r in results:
+                boxes = r.boxes
+                for box in boxes:
+                    # print(box)
+                    if box.cls[0] == 0:
+                        people += 1
             annotate_frame = results[0].plot()
 
             # encode as a jpeg image and return it
-            yield cv2.imencode('.jpg', annotate_frame)[1].tobytes()
+            yield (cv2.imencode('.jpg', annotate_frame)[1].tobytes(), people)
