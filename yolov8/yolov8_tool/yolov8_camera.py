@@ -4,6 +4,12 @@ from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QAction, QImage, QKeySequence, QPixmap
 from ultralytics import YOLO
 import time
+import torch
+from enum import Enum
+
+
+Device = Enum('Device', ['CPU', 'CUDA', 'RK3588', 'RASPBERRY_PI'])
+
 
 class Camera:
     def __init__(self, index_camera: int) -> None:
@@ -37,11 +43,21 @@ class CameraThread(QThread):
         self.prev_frame_time = 0
         self.new_frame_time = 0
         self._yolov8_model = False
+        self._device = Device.CPU
 
     def enable_yolov8(self):
         self.updateText.emit('loading model....')
         self._yolov8_model = YOLO("yolov8n.pt")
-        self._yolov8_model.to('cpu')
+        
+        if self._device == Device.CPU:
+            self.updateText.emit('inference using cpu....')
+            self._yolov8_model.to('cpu')
+        elif self._device == Device.CUDA:
+            self.updateText.emit('inference using cuda....')
+            self._yolov8_model.to('cuda')
+        elif self._device == Device.RASPBERRY_PI:
+            self.updateText.emit('inference using cuda....')
+        
         self._with_yolov8 = True
         self.updateText.emit('model loaded')
 
@@ -88,3 +104,17 @@ class CameraThread(QThread):
 
     def stop(self):
         self._status = False
+
+    def select_device(self, dev: Device):
+        self._device = dev
+
+    def IsCuda(self) -> bool:
+        if torch.cuda.is_available():
+            return True
+        return False
+    
+    def IsRK3588CPU(self) -> bool:
+        return False
+    
+    def IsRaspberryPi(self) -> bool:
+        return False

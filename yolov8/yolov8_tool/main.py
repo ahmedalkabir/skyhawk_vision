@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
 from main_window_ui import Ui_MainWindow
-from yolov8_camera import CameraThread
+from yolov8_camera import CameraThread, Device
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -21,6 +21,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.start_btn.clicked.connect(self.start_camera)
         self.start_with_yolov8.clicked.connect(self.start_with_yolov8_cb)
         self.stop.clicked.connect(self.stop_camera)
+
+        # check devices by selecting combobox
+        self.cpu_select.clicked.connect(self.check_devices)
+        self.cuda_select.clicked.connect(self.check_devices)
+        self.npu_select.clicked.connect(self.check_devices)
+        self.ncnn_select.clicked.connect(self.check_devices)
 
 
     def set_image(self, image):
@@ -49,6 +55,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._camera.stop()
         # wait unitl the thread exit
         self._camera.wait()
+
+    def check_devices(self):
+        if self.cpu_select.isChecked():
+            self._camera.select_device(Device.CPU)
+        elif self.cuda_select.isChecked():
+            if self._camera.IsCuda():
+                # enable cuda
+                self._camera.select_device(Device.CUDA)
+            else:
+                QMessageBox().warning(self, 'Error', 'your computer does not support cuda.')
+                self.cpu_select.setChecked(True)
+        elif self.npu_select.isChecked():
+            if self._camera.IsRK3588CPU():
+                # enable cuda
+                self._camera.select_device(Device.RK3588)
+            else:
+                QMessageBox().warning(self, 'Error', 'this is not RK3588 cpu based computer.')
+                self.cpu_select.setChecked(True)
+        elif self.ncnn_select.isChecked():
+            if self._camera.IsRK3588CPU():
+                # enable cuda
+                self._camera.select_device(Device.RASPBERRY_PI)
+            else:
+                QMessageBox().warning(self, 'Error', 'this is not raspberry pi.')
+                self.cpu_select.setChecked(True)
+
+        
 
 
 if __name__ == "__main__":
