@@ -282,7 +282,7 @@ class YOLOv8NPU:
     
 
     def plot(self, results):
-        return self._draw(image=self._img_to_plot, boxes=results[0], classes=results.classes[1], scores=results.scores[2])
+        return self._draw(image=self._img_to_plot, boxes=results[0], classes=results[1], scores=results[2])
     
 
     def __call__(self, frame):
