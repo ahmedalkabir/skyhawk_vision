@@ -20,11 +20,9 @@ while(True):
     new_frame_time = time.time()
     ret, frame = vid.read()
 
-    # results = model(frame)
-    results = model.model(frame=frame)
-    print(results)
+    results = model(frame=frame)
 
-    # annotate_frame = results[0].plot()
+    annotate_frame = model.plot(results)
 
     fps = 1/(new_frame_time-prev_frame_time)
     prev_frame_time = new_frame_time

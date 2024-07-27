@@ -22,6 +22,7 @@ class YOLOv8NPU:
     def __init__(self, model_path:str = '') -> None:
         self.rknn_lite = None
         self._model_path = model_path
+        self._img_to_plot = None
 
     def start_rknnLite(self) -> bool:
         self.rknn_lite = RKNNLite()
@@ -234,6 +235,8 @@ class YOLOv8NPU:
             # Draw the label text on the image
             cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
 
+        return img
+
 
     def _draw(self, image, boxes, scores, classes):
         img_h, img_w = image.shape[:2]
@@ -255,7 +258,7 @@ class YOLOv8NPU:
 
             # Retrieve the color for the class ID
             
-            self.draw_detections(image, left, top, right, bottom, score, cl)
+            return self.draw_detections(image, left, top, right, bottom, score, cl)
 
             # cv2.rectangle(image, (left, top), (right, bottom), color, 2)
             # cv2.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
@@ -263,20 +266,25 @@ class YOLOv8NPU:
             #             cv2.FONT_HERSHEY_SIMPLEX,
             #             0.6, (0, 0, 255), 2)
 
-    def model(self, frame):
-        pad_color = (0, 0, 0)
+    def _model(self, frame):
+        self._img_to_plot = frame.copy()
+
+        pad_color = (0, 0, 0)        
         img = self.letter_box(frame.copy(), new_shape=(640, 640), pad_color=(0,0,0))
-        
         # convert to 4D
         input = np.expand_dims(img, axis=0)
-        
+
         outputs = self.rknn_lite.inference([input])
 
         boxes, classes, scores = self.post_process(outputs)
 
         return (boxes, classes, scores)
     
-    def draw(self, boxes, classes, scores):
-        self._draw(boxes=boxes, classes=classes, scores=scores)
+
+    def plot(self, results):
+        return self._draw(image=self._img_to_plot, boxes=results.boxes, classes=results.classes, scores=results.scores)
     
+
+    def __call__(self, frame):
+        return self._model(frame=frame)
 
