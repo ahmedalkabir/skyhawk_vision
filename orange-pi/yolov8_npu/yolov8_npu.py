@@ -25,7 +25,7 @@ class YOLOv8NPU:
 
     def start_rknnLite(self) -> bool:
         self.rknn_lite = RKNNLite()
-        ret = self.rknn_lite.load(self._model_path)
+        ret = self.rknn_lite.load_rknn(self._model_path)
         if ret != 0:
             return False
         
