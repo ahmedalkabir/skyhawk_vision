@@ -23,7 +23,7 @@ class YOLOv8NPU:
         self.rknn_lite = None
         self._model_path = model_path
         self._img_to_plot = None
-        
+        self._classes = None
         if classes is not None:
             self._classes = classes
 
@@ -181,7 +181,7 @@ class YOLOv8NPU:
         # nms
         nboxes, nclasses, nscores = [], [], []
         for c in set(classes):
-            if self._classes:
+            if self._classes is not None:
                 if c == self._classes:
                     inds = np.where(classes == c)
                     b = boxes[inds]
