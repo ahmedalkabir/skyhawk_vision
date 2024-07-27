@@ -19,13 +19,17 @@ color_palette = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 MODEL_SIZE = (640, 640)
 
 class YOLOv8NPU:
-    def __init__(self, model_path:str = '') -> None:
+    def __init__(self, model_path:str = '', classes=None) -> None:
         self.rknn_lite = None
         self._model_path = model_path
+        self._img_to_plot = None
+        self._classes = None
+        if classes is not None:
+            self._classes = classes
 
     def start_rknnLite(self) -> bool:
         self.rknn_lite = RKNNLite()
-        ret = self.rknn_lite.load(self._model_path)
+        ret = self.rknn_lite.load_rknn(self._model_path)
         if ret != 0:
             return False
         
@@ -177,16 +181,29 @@ class YOLOv8NPU:
         # nms
         nboxes, nclasses, nscores = [], [], []
         for c in set(classes):
-            inds = np.where(classes == c)
-            b = boxes[inds]
-            c = classes[inds]
-            s = scores[inds]
-            keep = self.nms_boxes(b, s)
+            if self._classes is not None:
+                if c == self._classes:
+                    inds = np.where(classes == c)
+                    b = boxes[inds]
+                    c = classes[inds]
+                    s = scores[inds]
+                    keep = self.nms_boxes(b, s)
 
-            if len(keep) != 0:
-                nboxes.append(b[keep])
-                nclasses.append(c[keep])
-                nscores.append(s[keep])
+                    if len(keep) != 0:
+                        nboxes.append(b[keep])
+                        nclasses.append(c[keep])
+                        nscores.append(s[keep])
+            else:
+                inds = np.where(classes == c)
+                b = boxes[inds]
+                c = classes[inds]
+                s = scores[inds]
+                keep = self.nms_boxes(b, s)
+
+                if len(keep) != 0:
+                    nboxes.append(b[keep])
+                    nclasses.append(c[keep])
+                    nscores.append(s[keep])
 
         if not nclasses and not nscores:
             return None, None, None
@@ -213,26 +230,28 @@ class YOLOv8NPU:
 
         # Retrieve the color for the class ID
         color = color_palette[class_id]
-        if CLASSES[class_id] == 'person':
+        # if CLASSES[class_id] == 'person':
             # Draw the bounding box on the image
-            cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), color, 2)
+        cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), color, 2)
 
             # Create the label text with class name and score
-            label = f"{CLASSES[class_id]}: {score:.2f}"
+        label = f"{CLASSES[class_id]}: {score:.2f}"
 
             # Calculate the dimensions of the label text
-            (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+        (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
             # Calculate the position of the label text
-            label_x = left
-            label_y = top - 10 if top - 10 > label_height else top + 10
+        label_x = left
+        label_y = top - 10 if top - 10 > label_height else top + 10
 
             # Draw a filled rectangle as the background for the label text
-            cv2.rectangle(img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color,
+        cv2.rectangle(img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color,
                         cv2.FILLED)
 
             # Draw the label text on the image
-            cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+
+        return img
 
 
     def _draw(self, image, boxes, scores, classes):
@@ -262,19 +281,29 @@ class YOLOv8NPU:
             #             (left, top - 6),
             #             cv2.FONT_HERSHEY_SIMPLEX,
             #             0.6, (0, 0, 255), 2)
+        return image
+    
+    def _model(self, frame):
+        self._img_to_plot = frame.copy()
 
-    def model(self, frame):
-        pad_color = (0, 0, 0)
+        pad_color = (0, 0, 0)        
         img = self.letter_box(frame.copy(), new_shape=(640, 640), pad_color=(0,0,0))
-        
         # convert to 4D
+        input = np.expand_dims(img, axis=0)
+
         outputs = self.rknn_lite.inference([input])
 
         boxes, classes, scores = self.post_process(outputs)
 
         return (boxes, classes, scores)
     
-    def draw(self, boxes, classes, scores):
-        self._draw(boxes=boxes, classes=classes, scores=scores)
+
+    def plot(self, results):
+        if results[0] is not None:
+            return self._draw(image=self._img_to_plot, boxes=results[0], classes=results[1], scores=results[2])
+        return self._img_to_plot
     
+
+    def __call__(self, frame):
+        return self._model(frame=frame)
 

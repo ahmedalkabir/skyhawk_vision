@@ -82,6 +82,16 @@ class CameraThread(QThread):
             # Load the exported NCNN model
             ncnn_model = YOLO("yolov8n_ncnn_model")
             self._yolov8_model = ncnn_model
+        elif self._device == Device.RK3588:
+            self.updateText.emit('inference using npu....')
+            from yolov8_npu_rk3588 import YOLOv8NPU
+            absolute_path = os.path.dirname(os.path.abspath(__file__))
+            self._yolov8_model = YOLOv8NPU(absolute_path + '/rk3588_npu_models/yolov8n.rknn')
+
+            if not self._yolov8_model.start_rknnLite():
+                raise Exception("couldn't start RKNN NPU...")
+            self.updateText(f'{absolute_path}/rk3588_npu_models/yolov8n.rknn loaded')
+
         self._with_yolov8 = True
         self.updateText.emit('model loaded')
 
@@ -111,20 +121,40 @@ class CameraThread(QThread):
                 continue
 
             if self._with_yolov8:
-                results = self._yolov8_model(orignal_frame)
-                # results = self._yolov8_model.track(orignal_frame)
-                annotate_frame = results[0].plot()
-                fps = 1/(self.new_frame_time-self.prev_frame_time)
-                self.prev_frame_time = self.new_frame_time
+                if self._device == Device.RK3588:
+                    results = self._yolov8_model(frame=orignal_frame)
 
-                fps = int(fps)
-                fps_string = str(fps)
+                    annotate_frame = self._yolov8_model.plot(results)
+                    
+                    
+                    fps = 1/(self.new_frame_time-self.prev_frame_time)
+                    self.prev_frame_time = self.new_frame_time
 
-                cv2.putText(annotate_frame, fps_string, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
-                self.updateFrame.emit(self.from_cv2_to_qimage(annotate_frame, 400, 400))
+                    fps = int(fps)
+                    fps_string = str(fps)
 
-                for result in results:
-                    print(result.boxes)
+                    cv2.putText(annotate_frame, fps_string, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
+                    self.updateFrame.emit(self.from_cv2_to_qimage(annotate_frame, 400, 400))
+
+                    for result in results:
+                        print(result.boxes)
+                else:
+                    results = self._yolov8_model(orignal_frame)
+                    # results = self._yolov8_model.track(orignal_frame)
+                    annotate_frame = results[0].plot()
+                    
+                    
+                    fps = 1/(self.new_frame_time-self.prev_frame_time)
+                    self.prev_frame_time = self.new_frame_time
+
+                    fps = int(fps)
+                    fps_string = str(fps)
+
+                    cv2.putText(annotate_frame, fps_string, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
+                    self.updateFrame.emit(self.from_cv2_to_qimage(annotate_frame, 400, 400))
+
+                    for result in results:
+                        print(result.boxes)
 
             else:
                 self.updateFrame.emit(self.from_cv2_to_qimage(orignal_frame, 400, 400))
