@@ -19,10 +19,13 @@ color_palette = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 MODEL_SIZE = (640, 640)
 
 class YOLOv8NPU:
-    def __init__(self, model_path:str = '') -> None:
+    def __init__(self, model_path:str = '', classes=None) -> None:
         self.rknn_lite = None
         self._model_path = model_path
         self._img_to_plot = None
+        
+        if classes is not None:
+            self._classes = classes
 
     def start_rknnLite(self) -> bool:
         self.rknn_lite = RKNNLite()
@@ -178,16 +181,29 @@ class YOLOv8NPU:
         # nms
         nboxes, nclasses, nscores = [], [], []
         for c in set(classes):
-            inds = np.where(classes == c)
-            b = boxes[inds]
-            c = classes[inds]
-            s = scores[inds]
-            keep = self.nms_boxes(b, s)
+            if self._classes:
+                if c == self._classes:
+                    inds = np.where(classes == c)
+                    b = boxes[inds]
+                    c = classes[inds]
+                    s = scores[inds]
+                    keep = self.nms_boxes(b, s)
 
-            if len(keep) != 0:
-                nboxes.append(b[keep])
-                nclasses.append(c[keep])
-                nscores.append(s[keep])
+                    if len(keep) != 0:
+                        nboxes.append(b[keep])
+                        nclasses.append(c[keep])
+                        nscores.append(s[keep])
+            else:
+                inds = np.where(classes == c)
+                b = boxes[inds]
+                c = classes[inds]
+                s = scores[inds]
+                keep = self.nms_boxes(b, s)
+
+                if len(keep) != 0:
+                    nboxes.append(b[keep])
+                    nclasses.append(c[keep])
+                    nscores.append(s[keep])
 
         if not nclasses and not nscores:
             return None, None, None
