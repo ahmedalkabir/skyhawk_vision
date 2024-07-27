@@ -258,14 +258,15 @@ class YOLOv8NPU:
 
             # Retrieve the color for the class ID
             
-            return self.draw_detections(image, left, top, right, bottom, score, cl)
+            self.draw_detections(image, left, top, right, bottom, score, cl)
 
             # cv2.rectangle(image, (left, top), (right, bottom), color, 2)
             # cv2.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
             #             (left, top - 6),
             #             cv2.FONT_HERSHEY_SIMPLEX,
             #             0.6, (0, 0, 255), 2)
-
+        return image
+    
     def _model(self, frame):
         self._img_to_plot = frame.copy()
 
@@ -282,7 +283,7 @@ class YOLOv8NPU:
     
 
     def plot(self, results):
-        if not results[0]:
+        if results[0] is not None:
             return self._draw(image=self._img_to_plot, boxes=results[0], classes=results[1], scores=results[2])
         return self._img_to_plot
     
