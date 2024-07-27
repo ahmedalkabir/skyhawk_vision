@@ -75,8 +75,13 @@ class CameraThread(QThread):
             self.updateText.emit('inference using cuda....')
             self._yolov8_model.to('cuda')
         elif self._device == Device.RASPBERRY_PI:
-            self.updateText.emit('inference using cuda....')
-        
+            self.updateText.emit('inference using ncnn....')
+                        # Export the model to NCNN format
+            self._yolov8_model.export(format="ncnn")  # creates 'yolov8n_ncnn_model'
+
+            # Load the exported NCNN model
+            ncnn_model = YOLO("yolov8n_ncnn_model")
+            self._yolov8_model = ncnn_model
         self._with_yolov8 = True
         self.updateText.emit('model loaded')
 
