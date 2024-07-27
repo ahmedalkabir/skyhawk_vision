@@ -22,6 +22,12 @@ class Camera:
         if not self._cap.isOpened():
             return True
         
+    def open_video(self, path) -> bool:
+        print(path)
+        self._cap = cv2.VideoCapture(path)
+        if not self._cap.isOpened():
+            return True
+
     def close_camera(self):
         self._cap.release()
         cv2.destroyAllWindows()
@@ -44,6 +50,17 @@ class CameraThread(QThread):
         self.new_frame_time = 0
         self._yolov8_model = False
         self._device = Device.CPU
+        self._is_camera: bool = False
+        self._path_video: str = ''
+
+    def detect_video(self, path: str):
+        self._path_video = path
+        print(self._path_video)
+        self._is_camera = False
+
+    def detect_camera(self, index: int):
+        self._camera = Camera(0)
+        self._is_camera = True
 
     def enable_yolov8(self):
         self.updateText.emit('loading model....')
@@ -73,8 +90,12 @@ class CameraThread(QThread):
             return scaled_img
 
     def run(self):
-        self._camera.open_camera()
-        self.updateText.emit('camera opened...')
+        if self._is_camera:
+            self._camera.open_camera()
+            self.updateText.emit('camera opened...')
+        else:
+            self._camera.open_video(self._path_video)
+            self.updateFrame.emit('video opened...')
         self._status = True
         while self._status:
             self.new_frame_time = time.time()
@@ -84,6 +105,7 @@ class CameraThread(QThread):
 
             if self._with_yolov8:
                 results = self._yolov8_model(orignal_frame)
+                # results = self._yolov8_model.track(orignal_frame)
                 annotate_frame = results[0].plot()
                 fps = 1/(self.new_frame_time-self.prev_frame_time)
                 self.prev_frame_time = self.new_frame_time
