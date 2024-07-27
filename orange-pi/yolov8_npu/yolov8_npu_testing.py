@@ -2,7 +2,7 @@ import cv2
 import time
 from yolov8_npu import YOLOv8NPU
 
-model = YOLOv8NPU('rk3588_npu_models/yolov8n.rknn')
+model = YOLOv8NPU('./rk3588_npu_models/yolov8n.rknn')
 
 if not model.start_rknnLite():
     print('failed to start npu')
