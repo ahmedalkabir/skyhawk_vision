@@ -145,4 +145,10 @@ class CameraThread(QThread):
         return False
     
     def IsRaspberryPi(self) -> bool:
+        try:
+            os_detail = os.uname()
+            if os_detail.nodename == 'raspberrypi':
+                return True
+        except Exception as ex:
+            return False
         return False
