@@ -5,7 +5,9 @@ from PySide6.QtGui import QAction, QImage, QKeySequence, QPixmap
 from ultralytics import YOLO
 import time
 import torch
+import os
 from enum import Enum
+
 
 
 Device = Enum('Device', ['CPU', 'CUDA', 'RK3588', 'RASPBERRY_PI'])
@@ -23,8 +25,8 @@ class Camera:
             return True
         
     def open_video(self, path) -> bool:
-        print(path)
         self._cap = cv2.VideoCapture(path)
+        self._cap.set(cv2.CAP_PROP_FPS, 30)
         if not self._cap.isOpened():
             return True
 
@@ -136,6 +138,10 @@ class CameraThread(QThread):
         return False
     
     def IsRK3588CPU(self) -> bool:
+        try:
+            os_detail = os.uname()
+        except Exception as ex:
+            pass
         return False
     
     def IsRaspberryPi(self) -> bool:
