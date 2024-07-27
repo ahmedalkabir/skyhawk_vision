@@ -282,7 +282,7 @@ class YOLOv8NPU:
     
 
     def plot(self, results):
-        if results[0]:
+        if not results[0]:
             return self._draw(image=self._img_to_plot, boxes=results[0], classes=results[1], scores=results[2])
         return self._img_to_plot
     
