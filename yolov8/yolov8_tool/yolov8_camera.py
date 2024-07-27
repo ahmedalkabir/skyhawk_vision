@@ -136,8 +136,8 @@ class CameraThread(QThread):
                     cv2.putText(annotate_frame, fps_string, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
                     self.updateFrame.emit(self.from_cv2_to_qimage(annotate_frame, 400, 400))
 
-                    for result in results:
-                        print(result.boxes)
+                    # for result in results:
+                    #     print(result.boxes)
                 else:
                     results = self._yolov8_model(orignal_frame)
                     # results = self._yolov8_model.track(orignal_frame)
