@@ -145,8 +145,10 @@ class CameraThread(QThread):
     def IsRK3588CPU(self) -> bool:
         try:
             os_detail = os.uname()
+            if os_detail.nodename == 'orangepi5':
+                return True
         except Exception as ex:
-            pass
+            return False
         return False
     
     def IsRaspberryPi(self) -> bool:
