@@ -90,7 +90,7 @@ class CameraThread(QThread):
 
             if not self._yolov8_model.start_rknnLite():
                 raise Exception("couldn't start RKNN NPU...")
-            self.updateText(f'{absolute_path}/rk3588_npu_models/yolov8n.rknn loaded')
+            self.updateText.emit(f'{absolute_path}/rk3588_npu_models/yolov8n.rknn loaded')
 
         self._with_yolov8 = True
         self.updateText.emit('model loaded')
