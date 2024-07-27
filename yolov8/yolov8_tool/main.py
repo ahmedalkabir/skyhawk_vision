@@ -100,7 +100,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox().warning(self, 'Error', 'this is not RK3588 cpu based computer.')
                 self.cpu_select.setChecked(True)
         elif self.ncnn_select.isChecked():
-            if self._camera.IsRK3588CPU():
+            if self._camera.IsRaspberryPi():
                 # enable cuda
                 self._camera.select_device(Device.RASPBERRY_PI)
             else:
