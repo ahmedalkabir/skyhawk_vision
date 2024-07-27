@@ -214,26 +214,26 @@ class YOLOv8NPU:
 
         # Retrieve the color for the class ID
         color = color_palette[class_id]
-        if CLASSES[class_id] == 'person':
+        # if CLASSES[class_id] == 'person':
             # Draw the bounding box on the image
-            cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), color, 2)
+        cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), color, 2)
 
             # Create the label text with class name and score
-            label = f"{CLASSES[class_id]}: {score:.2f}"
+        label = f"{CLASSES[class_id]}: {score:.2f}"
 
             # Calculate the dimensions of the label text
-            (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+        (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
             # Calculate the position of the label text
-            label_x = left
-            label_y = top - 10 if top - 10 > label_height else top + 10
+        label_x = left
+        label_y = top - 10 if top - 10 > label_height else top + 10
 
             # Draw a filled rectangle as the background for the label text
-            cv2.rectangle(img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color,
+        cv2.rectangle(img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color,
                         cv2.FILLED)
 
             # Draw the label text on the image
-            cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
 
         return img
 
