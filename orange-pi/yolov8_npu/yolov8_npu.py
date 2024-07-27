@@ -268,6 +268,8 @@ class YOLOv8NPU:
         img = self.letter_box(frame.copy(), new_shape=(640, 640), pad_color=(0,0,0))
         
         # convert to 4D
+        input = np.expand_dims(img, axis=0)
+        
         outputs = self.rknn_lite.inference([input])
 
         boxes, classes, scores = self.post_process(outputs)
