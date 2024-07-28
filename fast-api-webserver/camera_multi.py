@@ -3,7 +3,7 @@
 import cv2
 from base_camera import BaseCamera
 from ultralytics import YOLO
-
+import os
 
 class Camera(BaseCamera):
     def __init__(self):
@@ -15,8 +15,21 @@ class Camera(BaseCamera):
         camera = cv2.VideoCapture(0)
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
-        model = YOLO("yolov8n.pt")
-        model.to('cpu')
+        model = None
+        is_it_npu = False
+        try:
+            from yolov8_npu import YOLOv8NPU
+            absolute_path = os.path.dirname(os.path.abspath(__file__))
+            model = YOLOv8NPU(absolute_path + '/rk3588_npu_models/yolov8n.rknn')
+
+            if not model.start_rknnLite():
+                print('failed to enable npu')
+                raise Exception("couldn't start RKNN NPU...")
+            is_it_npu = True
+        except Exception as ex:
+            model = YOLO("yolov8n.pt")
+            model.to('cpu')
+
         people = 0 
         while True:
             # read current frame
