@@ -20,7 +20,7 @@ class Camera(BaseCamera):
         try:
             from yolov8_npu import YOLOv8NPU
             absolute_path = os.path.dirname(os.path.abspath(__file__))
-            model = YOLOv8NPU(absolute_path + '/rk3588_npu_models/yolov8n.rknn')
+            model = YOLOv8NPU(absolute_path + '/rk3588_npu_models/yolov8n.rknn', classes=0)
 
             if not model.start_rknnLite():
                 print('failed to enable npu')
@@ -31,21 +31,24 @@ class Camera(BaseCamera):
             model.to('cpu')
 
         people = 0 
+        annotate_frame = None
         while True:
             # read current frame
             people = 0
             _, img = camera.read()
-
-
-            results = model(img, classes=0)
-            # print(len(results))
-            for r in results:
-                boxes = r.boxes
-                for box in boxes:
-                    # print(box)
-                    if box.cls[0] == 0:
-                        people += 1
-            annotate_frame = results[0].plot()
+            if is_it_npu:
+                results = model(img)
+                annotate_frame = model.plot(results)
+            else:
+                results = model(img, classes=0)
+                # print(len(results))
+                for r in results:
+                    boxes = r.boxes
+                    for box in boxes:
+                        # print(box)
+                        if box.cls[0] == 0:
+                            people += 1
+                annotate_frame = results[0].plot()
 
             # encode as a jpeg image and return it
             yield (cv2.imencode('.jpg', annotate_frame)[1].tobytes(), people)
