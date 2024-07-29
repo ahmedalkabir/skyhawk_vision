@@ -269,8 +269,8 @@ class YOLOv8NPU:
             right = int(x2 * x_factor)
             bottom = int(y2 * y_factor) + 10
 
-            print('class: {}, score: {}'.format(CLASSES[cl], score))
-            print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(left, top, right, bottom))
+            # print('class: {}, score: {}'.format(CLASSES[cl], score))
+            # print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(left, top, right, bottom))
 
             # Retrieve the color for the class ID
             
