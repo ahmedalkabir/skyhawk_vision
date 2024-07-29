@@ -12,6 +12,14 @@ from fastapi.templating import Jinja2Templates
 import os
 # from camera_single import Camera
 from camera_multi import Camera
+from pymavlink import mavutil
+
+
+# TODO: refactor this shits
+master = mavutil.mavlink_connection("/dev/ttyS4", baud=57600)
+
+# Wait a heartbeat before sending commands
+master.wait_heartbeat()
 
 app = FastAPI()
 
@@ -65,6 +73,28 @@ async def stop_camera():
     global camera_status
     camera_status = False
     return {"message": "success"}
+
+@app.get('/arm_drone')
+async def arm_drone():
+    master.mav.command_long_send(
+        master.target_system,
+        master.target_component,
+        mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+        0,
+        1, 0, 0, 0, 0, 0, 0)
+    master.motors_armed_wait()
+    return {"message": "drone armed"}
+
+@app.get('/disarm_drone')
+async def disarm_drone():
+    master.mav.command_long_send(
+        master.target_system,
+        master.target_component,
+        mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+        0,
+        0, 0, 0, 0, 0, 0, 0)
+    master.motors_disarmed_wait()
+    return {"message": "drone disarmed"}
 
 @app.get('/sse-testing')
 async def sse():
