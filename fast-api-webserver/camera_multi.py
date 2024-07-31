@@ -38,7 +38,8 @@ class Camera(BaseCamera):
             _, img = camera.read()
             if is_it_npu:
                 results = model(img)
-                people = len(results[0])
+                if results[0] is not None:
+                    people = len(results[0])
                 annotate_frame = model.plot(results)
             else:
                 results = model(img, classes=0)
