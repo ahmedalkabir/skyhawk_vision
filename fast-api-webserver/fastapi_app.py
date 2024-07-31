@@ -19,7 +19,7 @@ from pymavlink import mavutil
 master = mavutil.mavlink_connection("/dev/ttyS4", baud=57600)
 
 # Wait a heartbeat before sending commands
-master.wait_heartbeat()
+# master.wait_heartbeat()
 
 app = FastAPI()
 
